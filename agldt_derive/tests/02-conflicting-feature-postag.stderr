@@ -1,0 +1,7 @@
+error: proc-macro derive panicked
+ --> tests/02-conflicting-feature-postag.rs:4:10
+  |
+4 | #[derive(PostagFeature)]
+  |          ^^^^^^^^^^^^^
+  |
+  = help: message: Two variants tried to use the same postag value: m
