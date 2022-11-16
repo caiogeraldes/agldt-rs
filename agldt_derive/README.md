@@ -18,13 +18,13 @@ Procedural macro for deriving the implementation of the trait `agltd::PostagFeat
  Such feature has a representation in the postag string of the AGLDT XML notation, in the case
  of λελυμένων, the "m" at the sixth index postion:
 
- ```{xml}
+ ```xml
  <word id="43" form="λελυμένων" lemma="λύω" postag="v-prpemg-" relation="ADV_CO" head="40"/>
  ```
 
  By declaring the enum as bellow, the method `to_agldt_postag()` becomes available:
 
- ```
+ ```rust
  extern crate agldt_derive;
  extern crate agldt;
  use agldt::*;
@@ -47,9 +47,9 @@ Procedural macro for deriving the implementation of the trait `agltd::PostagFeat
  The derive chooses automatically a single character for representing the feature by using the
  first letter of the enum variant, but there might be issues: either two variants with the
  same first letter end up causing a conflict, or the user / standar requires non-trivial rules.
- In this case, the attribute `#[postag(<char>)] can be used:
+ In this case, the attribute `#[postag(<char>)]` can be used:
 
- ```
+ ```rust
  extern crate agldt;
  use agldt::POSFeature;
  use agldt::PostagFeature;

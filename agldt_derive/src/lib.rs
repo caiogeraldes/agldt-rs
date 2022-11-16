@@ -156,7 +156,7 @@ fn get_nested_id(nested: &NestedMeta) -> u8 {
 /// The derive chooses automatically a single character for representing the feature by using the
 /// first letter of the enum variant, but there might be issues: either two variants with the
 /// same first letter end up causing a conflict, or the user / standar requires non-trivial rules.
-/// In this case, the attribute `#[postag(<char>)] can be used:
+/// In this case, the attribute `#[postag(<char>)]` can be used:
 ///
 /// ```
 /// extern crate agldt;
