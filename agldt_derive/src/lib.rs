@@ -1,8 +1,8 @@
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::parse_macro_input;
 use syn::{
-    parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Field, Ident, Lit, Meta,
-    MetaList, NestedMeta, Variant,
+    Attribute, Data, DataEnum, DeriveInput, Ident, Lit, Meta, MetaList, NestedMeta, Variant,
 };
 
 fn get_variants(data: &DataEnum) -> Vec<&Variant> {
@@ -12,15 +12,6 @@ fn get_variants(data: &DataEnum) -> Vec<&Variant> {
         vv.push(variant);
     }
     vv
-}
-
-fn get_fields(data: &DataStruct) -> Vec<&Field> {
-    let DataStruct { fields, .. } = data;
-    let mut vf: Vec<&Field> = vec![];
-    for field in fields {
-        vf.push(field)
-    }
-    vf
 }
 
 fn gen_postags(variants: Vec<&Variant>) -> Vec<char> {
@@ -34,16 +25,10 @@ fn gen_postags(variants: Vec<&Variant>) -> Vec<char> {
                 vc.push(pt);
             }
         } else if variant.attrs.len() > 1 {
-            unimplemented!();
+            unimplemented!("Only one variant implemented");
         } else {
             let attr = &variant.attrs[0].parse_meta().unwrap();
             match attr {
-                Meta::Path(_) => {
-                    unimplemented!();
-                }
-                Meta::NameValue(_) => {
-                    unimplemented!();
-                }
                 Meta::List(MetaList { path, nested, .. }) => {
                     assert_eq!(path.segments[0].ident, "postag");
                     if let NestedMeta::Lit(l) = &nested[0] {
@@ -60,6 +45,7 @@ fn gen_postags(variants: Vec<&Variant>) -> Vec<char> {
                         }
                     }
                 }
+                _ => unimplemented!("Invalid meta"),
             }
         }
     }
@@ -68,6 +54,9 @@ fn gen_postags(variants: Vec<&Variant>) -> Vec<char> {
 
 fn gen_postag(variant: &Variant) -> char {
     let ident = variant.ident.to_string();
+    if ident == "EMPTY" {
+        return '-';
+    }
     return ident.to_lowercase().chars().next().unwrap();
 }
 
@@ -76,34 +65,54 @@ fn get_index(attrs: &Vec<Attribute>) -> u8 {
         return 0;
     }
     if attrs.len() > 1 {
-        unimplemented!()
+        let attr = attrs[0].parse_meta().unwrap();
+        match attr {
+            Meta::List(MetaList { path, nested, .. }) => {
+                if path.segments[0].ident == "postagindex" {
+                    let id = get_nested_id(&nested[0]);
+                    id
+                } else if path.segments[0].ident == "complexfeature" {
+                    let attr = attrs[1].parse_meta().unwrap();
+                    if let Meta::List(MetaList { path, nested, .. }) = attr {
+                        assert_eq!(path.segments[0].ident, "postagindex");
+                        let id = get_nested_id(&nested[0]);
+                        id
+                    } else {
+                        panic!("{:#?}", attr);
+                    }
+                } else {
+                    unimplemented!("Invalid attribute.");
+                }
+            }
+            _ => unimplemented!("Invalid meta."),
+        }
     } else {
         let attr = attrs[0].parse_meta().unwrap();
         match attr {
-            Meta::Path(_) => {
-                unimplemented!();
-            }
-            Meta::NameValue(_) => {
-                unimplemented!();
-            }
             Meta::List(MetaList { path, nested, .. }) => {
                 assert_eq!(path.segments[0].ident, "postagindex");
-                if let NestedMeta::Lit(l) = &nested[0] {
-                    if let Lit::Int(i) = l {
-                        let id: u8 = i.token().to_string().parse().unwrap();
-                        return id;
-                    } else {
-                        panic!("epa");
-                    }
-                } else {
-                    panic!("epa");
-                }
+                let id = get_nested_id(&nested[0]);
+                id
             }
+            _ => unimplemented!("Invalid meta."),
         }
     }
 }
 
-#[proc_macro_derive(PostagFeature, attributes(postag, postagindex))]
+fn get_nested_id(nested: &NestedMeta) -> u8 {
+    if let NestedMeta::Lit(l) = &nested {
+        if let Lit::Int(i) = l {
+            let id: u8 = i.token().to_string().parse().unwrap();
+            return id;
+        } else {
+            panic!("{:#?}", l);
+        }
+    } else {
+        panic!("epa");
+    }
+}
+
+#[proc_macro_derive(PostagFeature, attributes(postag, postagindex, complexfeature))]
 pub fn derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
 
@@ -117,8 +126,6 @@ pub fn derive(input: TokenStream) -> TokenStream {
             let postags: Vec<char> = gen_postags(variants);
 
             quote!(
-                use agldt::PostagFeature;
-                use agldt::POSFeature;
 
                 impl PostagFeature for #main_name {
                     fn to_agldt_postag(&self) -> POSFeature {
@@ -132,12 +139,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 }
             )
         }
-        Data::Struct(structdata) => {
-            let fields = get_fields(&structdata);
-            dbg!(fields);
-            unimplemented!()
-        }
-        _ => unimplemented!(),
+        _ => unimplemented!("Derive only implemented for Enums."),
     };
     TokenStream::from(expanded)
 }

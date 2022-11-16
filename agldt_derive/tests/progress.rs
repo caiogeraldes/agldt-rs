@@ -5,4 +5,5 @@ fn tests() {
     t.compile_fail("tests/02-conflicting-feature-postag.rs");
     t.pass("tests/03-postag-attribute.rs");
     t.pass("tests/04-postagindex-attribute.rs");
+    t.pass("tests/05-complex-feature-basic-parse.rs");
 }
