@@ -17,24 +17,40 @@ struct Treebank {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Header {
-    // #[serde(rename = "releaseDate")]
-    // release_date: String,
-    // #[serde(rename = "annotationDate")]
-    // annotation_date: String,
-    // #[serde(rename = "annotationScheme")]
-    // annotation_scheme: String,
-    // #[serde(rename = "fileDesc")]
-    // file_desc: FileDesc,
+    #[serde(rename = "releaseDate")]
+    release_date: String,
+    #[serde(rename = "annotationDate")]
+    annotation_date: String,
+    #[serde(rename = "annotationScheme")]
+    annotation_scheme: String,
+    #[serde(rename = "fileDesc")]
+    file_desc: FileDesc,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+struct FileDesc {
+    #[serde(rename = "editionStmt")]
+    edition_stmt: EditionStmt,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+struct EditionStmt {
+    #[serde(rename = "$value")]
+    resp_stmts: Vec<RespStmt>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+struct RespStmt {
+    // #[serde(rename = "persName")]
+    // pers_name: PersName,
+    resp: String,
+    address: Option<String>,
 }
 
 // #[derive(Debug, Serialize, Deserialize, PartialEq)]
-// struct FileDesc {
-//     #[serde(rename = "editionStmt")]
-//     edition_stmt: EditionStmt,
-// }
+// enum PersName {
 
-// #[derive(Debug, Serialize, Deserialize, PartialEq)]
-// struct EditionStmt {}
+// }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Body {
