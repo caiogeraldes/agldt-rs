@@ -7,7 +7,7 @@ Procedural macro for deriving the implementation of the trait `agltd::PostagFeat
 
  Suppose you have a feature `Gender`:
 
- ```{rust}
+ ```rust
  enum Gender {
      Masculine,
      Feminine,
