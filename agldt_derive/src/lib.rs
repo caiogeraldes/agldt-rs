@@ -136,7 +136,8 @@ fn get_nested_id(nested: &NestedMeta) -> u8 {
 /// ```
 /// extern crate agldt_derive;
 /// extern crate agldt;
-/// use agldt::*;
+/// use agldt::features::POSFeature;
+/// use agldt::features::PostagFeature;
 /// use agldt_derive::PostagFeature;
 ///
 /// #[derive(PostagFeature)]
@@ -160,8 +161,8 @@ fn get_nested_id(nested: &NestedMeta) -> u8 {
 ///
 /// ```
 /// extern crate agldt;
-/// use agldt::POSFeature;
-/// use agldt::PostagFeature;
+/// use agldt::features::POSFeature;
+/// use agldt::features::PostagFeature;
 /// extern crate agldt_derive;
 /// use agldt_derive::PostagFeature;
 ///
