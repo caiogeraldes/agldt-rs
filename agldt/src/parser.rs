@@ -2,8 +2,10 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 pub fn preprocess(src: &str) -> String {
+    let re_xmlcolon = Regex::new(r"xml:").unwrap();
+    let src = re_xmlcolon.replace_all(src, "xml_");
     let re_persname = Regex::new(r"<persName>(.*)</persName>\n").unwrap();
-    let src = re_persname.replace_all(src, r"<persName><name>$1</name></persName>");
+    let src = re_persname.replace_all(&src, r"<persName><name>$1</name></persName>");
     let re_address = Regex::new(r"(<resp>.*</resp>)\n\s*(<address>.*</address>)").unwrap();
     let src = re_address.replace_all(&src, r"$2$1");
     let re_address_persname = Regex::new(r"(</persName>)\s*(<address>.*</address>)").unwrap();
@@ -14,8 +16,7 @@ pub fn preprocess(src: &str) -> String {
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Treebank {
     version: String,
-    // #[serde(rename = "xml_lang")]
-    // lang: String,
+    xml_lang: String,
     cts: String,
     header: Header,
     body: Body,
