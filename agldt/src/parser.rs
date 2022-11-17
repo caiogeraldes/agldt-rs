@@ -38,6 +38,8 @@ pub struct Header {
 pub struct FileDesc {
     #[serde(rename = "editionStmt")]
     edition_stmt: EditionStmt,
+    #[serde(rename = "biblStruct")]
+    bibl_struct: BiblStruct,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -50,6 +52,7 @@ pub struct EditionStmt {
 pub struct RespStmt {
     #[serde(rename = "persName")]
     pers_name: Option<PersInfo>,
+    name: Option<String>,
     resp: String,
 }
 
@@ -59,6 +62,28 @@ pub struct PersInfo {
     short: Option<String>,
     uri: Option<String>,
     address: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct BiblStruct {
+    monogr: Monogr,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Monogr {
+    author: String,
+    title: String,
+    #[serde(rename = "respStmt")]
+    resp_stmts: Vec<RespStmt>,
+    imprint: Imprint,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Imprint {
+    #[serde(rename = "pubPlace")]
+    pub_place: Vec<String>,
+    publisher: Vec<String>,
+    date: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
