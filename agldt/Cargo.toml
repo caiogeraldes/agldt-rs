@@ -8,6 +8,11 @@ description.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+regex = "1.7.0"
 serde = { version = "1.0.147", features = ["derive"] }
 serde-xml-rs = "0.6.0"
 serde_derive = "1.0.147"
+
+[[test]]
+name = "tests"
+path = "tests/tests.rs"
