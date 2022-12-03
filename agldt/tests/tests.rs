@@ -1,5 +1,6 @@
 use agldt::parser::*;
 
+#[test]
 fn test_persname() {
     use serde_xml_rs::from_str;
     let src = r#"
@@ -23,6 +24,7 @@ fn test_persname() {
     assert!(from_str::<EditionStmt>(&preprocess(&src)).is_ok());
 }
 
+#[test]
 fn test_serde() {
     use serde_xml_rs::from_str;
     use std::fs::read_to_string;
@@ -30,7 +32,23 @@ fn test_serde() {
     assert!(from_str::<Treebank>(&preprocess(&src)).is_ok());
 }
 
-fn main() {
-    test_persname();
-    test_serde();
+#[test]
+#[ignore]
+fn test_serde_all() {
+    use dotenv;
+    use serde_xml_rs::from_str;
+    use std::fs::{read_dir, read_to_string};
+
+    dotenv::dotenv().ok();
+    let paths = read_dir(dotenv::var("AGLDT_PATH").unwrap()).unwrap();
+    for file in paths {
+        let file = file.unwrap().path();
+        let src = read_to_string(&file).unwrap();
+        if !(from_str::<Treebank>(&preprocess(&src)).is_ok()) {
+            dbg!(&file);
+            from_str::<Treebank>(&preprocess(&src)).unwrap();
+            panic!();
+        }
+        // assert!(from_str::<Treebank>(&preprocess(&src)).is_ok());
+    }
 }

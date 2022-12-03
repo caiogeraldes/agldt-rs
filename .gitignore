@@ -17,3 +17,5 @@ Cargo.lock
 agldt_derive/src/main.rs
 
 output.txt
+.env
+*/.env
