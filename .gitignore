@@ -15,3 +15,5 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 agldt_derive/src/main.rs
+
+output.txt
