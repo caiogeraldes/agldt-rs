@@ -1,9 +1,6 @@
 [workspace]
 
-members = [
-    "agldt",
-    "agldt_derive",
-]
+members = ["cli", "agldt", "agldt_derive"]
 
 [workspace.package]
 version = "0.0.0"
