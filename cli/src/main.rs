@@ -35,10 +35,10 @@ enum Commands {
         #[clap(short, long, default_value = "output.txt")]
         output: String,
         /// Lists forms and not lemmata
-        #[clap(short, long, default_value = "false")]
+        #[clap(short, long, action)]
         forms: bool,
         /// Counts entries
-        #[clap(short, long, default_value = "false")]
+        #[clap(short, long, action)]
         count: bool,
     },
     /// Describes treebank
