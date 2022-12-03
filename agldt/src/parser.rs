@@ -79,6 +79,14 @@ impl Treebank {
     pub fn sentences(&self) -> Vec<Sentence> {
         self.body.sentences.clone()
     }
+
+    pub fn count_tokens(&self) -> usize {
+        self.body.count_tokens()
+    }
+
+    pub fn count_words(&self) -> usize {
+        self.body.count_words()
+    }
 }
 
 impl Display for Treebank {
