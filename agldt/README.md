@@ -65,5 +65,5 @@ for `"0"`.
 
 ### Serialization
 
-Uses [`serde`] for serializing the data. I did my best to keep the metadata
+Uses `serde` for serializing the data. I did my best to keep the metadata
 accessible, but there are still some missing fields that will later be included.
