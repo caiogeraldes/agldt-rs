@@ -2,11 +2,11 @@ use agldt::parser::*;
 use anyhow::Result;
 use std::collections::HashMap;
 use std::fs::{read_to_string, write};
-use unicode_normalization::is_nfkc;
+use unicode_normalization::{is_nfc, is_nfkc};
 
 pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bool) -> Result<()> {
     let mut tokens: Vec<String> = vec![];
-    let tokens_string: String;
+    let lexicon_string: String;
 
     for sentence in treebank.sentences() {
         for word in sentence.words() {
@@ -28,19 +28,19 @@ pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bo
 
     if count {
         log::info!("Writing list of lemmata with counts in {}", &output);
-        let mut m: HashMap<String, usize> = HashMap::new();
-        for x in tokens.iter() {
-            *m.entry(x.trim().to_string()).or_default() += 1;
+        let mut lemma_count: HashMap<String, usize> = HashMap::new();
+        for token in tokens.iter() {
+            *lemma_count.entry(token.trim().to_string()).or_default() += 1;
         }
 
-        let mut hash_vec: Vec<(&String, &usize)> = m.iter().collect();
+        let mut hash_vec: Vec<(&String, &usize)> = lemma_count.iter().collect();
         hash_vec.sort_by(|a, b| b.1.cmp(a.1));
 
         let mut tokens: Vec<String> = vec![];
         for i in hash_vec {
             tokens.push(format!("\"{}\",{}", i.0, i.1));
         }
-        tokens_string = tokens.join("\n");
+        lexicon_string = tokens.join("\n");
     } else {
         log::info!("Writing list of lemmata in {}", &output);
         for token in tokens.iter_mut() {
@@ -51,16 +51,16 @@ pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bo
         }
         tokens.sort();
         tokens.dedup();
-        tokens_string = tokens.join("\n");
+        lexicon_string = tokens.join("\n");
     }
 
-    write(output, tokens_string)?;
+    write(output, lexicon_string)?;
     Ok(())
 }
 
 pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool) -> Result<()> {
     let mut tokens: Vec<String> = vec![];
-    let tokens_string: String;
+    let lexicon_string: String;
     for sentence in treebank.sentences() {
         for word in sentence.words() {
             let form_string = word.form().to_string();
@@ -72,19 +72,19 @@ pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool
 
     if count {
         log::info!("Writing list of tokens with counts in {}", &output);
-        let mut m: HashMap<String, usize> = HashMap::new();
-        for x in tokens.iter() {
-            *m.entry(x.trim().to_string()).or_default() += 1;
+        let mut forms_count: HashMap<String, usize> = HashMap::new();
+        for token in tokens.iter() {
+            *forms_count.entry(token.trim().to_string()).or_default() += 1;
         }
 
-        let mut hash_vec: Vec<(&String, &usize)> = m.iter().collect();
+        let mut hash_vec: Vec<(&String, &usize)> = forms_count.iter().collect();
         hash_vec.sort_by(|a, b| b.1.cmp(a.1));
 
         let mut tokens: Vec<String> = vec![];
         for i in hash_vec {
             tokens.push(format!("\"{}\",{}", i.0, i.1));
         }
-        tokens_string = tokens.join("\n");
+        lexicon_string = tokens.join("\n");
     } else {
         log::info!("Writing list of tokens in {}", &output);
         for token in tokens.iter_mut() {
@@ -92,9 +92,9 @@ pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool
         }
         tokens.sort();
         tokens.dedup();
-        tokens_string = tokens.join("\n");
+        lexicon_string = tokens.join("\n");
     }
-    write(output, tokens_string)?;
+    write(output, lexicon_string)?;
     Ok(())
 }
 
@@ -126,7 +126,7 @@ pub(crate) fn pick_treebank_file(treebank_file: &String) -> Result<Treebank> {
 
 pub(crate) fn check_unicode(treebank: &Treebank) -> Result<()> {
     let mut tokens: Vec<String> = vec![];
-    let tokens_string: String;
+    let mut report_string: String;
     for sentence in treebank.sentences() {
         for word in sentence.words() {
             let form_string = word.form().to_string();
@@ -138,21 +138,31 @@ pub(crate) fn check_unicode(treebank: &Treebank) -> Result<()> {
 
     tokens.dedup();
 
-    let mut m: HashMap<bool, usize> = HashMap::new();
+    let mut nfkc: HashMap<bool, usize> = HashMap::new();
+    let mut non_nfkc: Vec<String> = vec![];
+
     for x in tokens.iter() {
-        *m.entry(is_nfkc(x)).or_default() += 1;
+        *nfkc.entry(is_nfkc(x)).or_default() += 1;
+        if !is_nfkc(x) && !non_nfkc.contains(x) {
+            non_nfkc.push(x.to_string());
+        }
     }
 
-    let mut hash_vec: Vec<(&bool, &usize)> = m.iter().collect();
+    let mut hash_vec: Vec<(&bool, &usize)> = nfkc.iter().collect();
     hash_vec.sort_by(|a, b| b.1.cmp(a.1));
 
     let mut tokens: Vec<String> = vec![];
+
+    tokens.push(treebank.to_string());
+    tokens.push("NFKC frequency (tokens):".to_string());
+
     for i in hash_vec {
         tokens.push(format!("\"{}\",{}", i.0, i.1));
     }
-    tokens_string = tokens.join("\n");
+    report_string = tokens.join("\n");
+    report_string.push_str(&format!("\n\nNon-NFKC unique tokens: {:?}\n", non_nfkc));
 
-    write("report.txt", tokens_string)?;
+    write("report.txt", report_string)?;
 
     Ok(())
 }
