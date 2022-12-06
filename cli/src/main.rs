@@ -1,6 +1,4 @@
 use clap::*;
-use dotenv;
-use pretty_env_logger;
 
 mod cli;
 mod tools;

@@ -2,7 +2,7 @@ use crate::tools::*;
 use anyhow::Result;
 use clap::*;
 
-const HELP_TEMPLATE: &'static str = "\
+const HELP_TEMPLATE: &str = "\
 {before-help}{name} {version}
 {about-section}{author-section}
 {usage-heading} {usage}
@@ -61,12 +61,12 @@ pub(crate) fn run_command(cli: Cli) -> Result<()> {
             count,
         } => {
             let src = pick_treebank_file(&treebank_file)?;
-            let output_file: String;
-            if &output != "OUT" {
-                output_file = output;
+            let output_file = if &output != "OUT" {
+                output
             } else {
-                output_file = format!("lexicon-{}", &treebank_file.replace(".xml", ".csv"));
-            }
+                format!("lexicon-{}", &treebank_file.replace(".xml", ".csv"))
+            };
+
             if forms {
                 build_lexicon_forms(&src, &output_file, count)?;
             } else {

@@ -6,12 +6,15 @@ use std::collections::HashMap;
 use std::fs::{read_to_string, write};
 use unicode_normalization::{is_nfkc, UnicodeNormalization};
 
-fn normalize_unicode<T: Into<String>>(input: T) -> String {
+/// Converts the input to NFKC Unicode.
+pub(crate) fn normalize_unicode<T: Into<String>>(input: T) -> String {
     let input: &str = &input.into();
     input.nfkc().collect::<String>()
 }
 
-fn order_greek(tokens: &mut Vec<String>) {
+/// Sort tokens alphabetically following the rules for Polytonic Greek usign ICU's localization and
+/// collation tools.
+pub(crate) fn order_greek(tokens: &mut [String]) {
     const LOCALE: Locale = locale!("el");
     let mut options = CollatorOptions::new();
     options.strength = Some(Strength::Primary);
@@ -61,7 +64,7 @@ pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bo
     } else {
         log::info!("Writing list of lemmata in {}", &output);
         for token in tokens.iter_mut() {
-            if token.starts_with(" ") {
+            if token.starts_with(' ') {
                 return Err(anyhow::anyhow!("{}", token));
             };
             *token = token.trim().to_string();
@@ -140,7 +143,7 @@ pub(crate) fn pick_treebank_file(treebank_file: &String) -> Result<Treebank> {
         src = read_to_string(treebank_file)?;
     }
 
-    Ok(Treebank::from_str(&src)?)
+    Ok(Treebank::from_xml_str(&src)?)
 }
 
 pub(crate) fn check_unicode(treebank: &Treebank) -> Result<()> {
