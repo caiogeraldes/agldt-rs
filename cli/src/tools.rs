@@ -1,8 +1,24 @@
 use agldt::parser::*;
 use anyhow::Result;
+use icu::collator::*;
+use icu::locid::{locale, Locale};
 use std::collections::HashMap;
 use std::fs::{read_to_string, write};
-use unicode_normalization::{is_nfc, is_nfkc};
+use unicode_normalization::{is_nfkc, UnicodeNormalization};
+
+fn normalize_unicode<T: Into<String>>(input: T) -> String {
+    let input: &str = &input.into();
+    input.nfkc().collect::<String>()
+}
+
+fn order_greek(tokens: &mut Vec<String>) {
+    const LOCALE: Locale = locale!("el");
+    let mut options = CollatorOptions::new();
+    options.strength = Some(Strength::Primary);
+    let collator =
+        Collator::try_new_unstable(&icu_testdata::unstable(), &LOCALE.into(), options).unwrap();
+    tokens.sort_by(|a, b| collator.compare(a, b));
+}
 
 pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bool) -> Result<()> {
     let mut tokens: Vec<String> = vec![];
@@ -13,9 +29,9 @@ pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bo
             if let Some(form_string) = word.lemma() {
                 if word.is_word() {
                     if form_string.is_empty() {
-                        tokens.push(format!("UNKNOWN: {}", word.form()));
+                        tokens.push(format!("UNKNOWN: {}", normalize_unicode(word.form())));
                     } else {
-                        tokens.push(form_string.into());
+                        tokens.push(normalize_unicode(form_string));
                     }
                 } else {
                     continue;
@@ -34,11 +50,12 @@ pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bo
         }
 
         let mut hash_vec: Vec<(&String, &usize)> = lemma_count.iter().collect();
+
         hash_vec.sort_by(|a, b| b.1.cmp(a.1));
 
         let mut tokens: Vec<String> = vec![];
         for i in hash_vec {
-            tokens.push(format!("\"{}\",{}", i.0, i.1));
+            tokens.push(format!("\"{}\",{}", normalize_unicode(i.0), i.1));
         }
         lexicon_string = tokens.join("\n");
     } else {
@@ -49,7 +66,8 @@ pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bo
             };
             *token = token.trim().to_string();
         }
-        tokens.sort();
+
+        order_greek(&mut tokens);
         tokens.dedup();
         lexicon_string = tokens.join("\n");
     }
@@ -65,7 +83,7 @@ pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool
         for word in sentence.words() {
             let form_string = word.form().to_string();
             if word.is_word() {
-                tokens.push(form_string)
+                tokens.push(normalize_unicode(form_string))
             }
         }
     }
@@ -82,7 +100,7 @@ pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool
 
         let mut tokens: Vec<String> = vec![];
         for i in hash_vec {
-            tokens.push(format!("\"{}\",{}", i.0, i.1));
+            tokens.push(format!("\"{}\",{}", normalize_unicode(i.0), i.1));
         }
         lexicon_string = tokens.join("\n");
     } else {
@@ -90,7 +108,8 @@ pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool
         for token in tokens.iter_mut() {
             *token = token.trim().to_string();
         }
-        tokens.sort();
+
+        order_greek(&mut tokens);
         tokens.dedup();
         lexicon_string = tokens.join("\n");
     }

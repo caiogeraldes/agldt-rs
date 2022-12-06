@@ -19,5 +19,5 @@ agldt_derive/src/main.rs
 output.txt
 .env
 */.env
-.csv
+*.csv
 report.txt
