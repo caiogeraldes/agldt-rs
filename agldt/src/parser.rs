@@ -59,10 +59,10 @@ pub fn preprocess(src: &str) -> String {
     let re_head = Regex::new("head=\"\"").unwrap();
     let src = re_head.replace_all(&src, "head=\"0\"");
 
-    src.to_owned().to_string()
+    src.clone().to_string()
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Treebank {
     version: String,
     xml_lang: String,
@@ -72,8 +72,8 @@ pub struct Treebank {
 }
 
 impl Treebank {
-    pub fn from_str(string: &str) -> Result<Self, serde_xml_rs::Error> {
-        serde_xml_rs::from_str::<Treebank>(&preprocess(&string))
+    pub fn from_xml_str(string: &str) -> Result<Self, serde_xml_rs::Error> {
+        serde_xml_rs::from_str::<Treebank>(&preprocess(string))
     }
 
     pub fn sentences(&self) -> Vec<Sentence> {
@@ -99,7 +99,7 @@ impl Display for Treebank {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Header {
     #[serde(rename = "releaseDate")]
     release_date: String,
@@ -121,7 +121,7 @@ impl Display for Header {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FileDesc {
     #[serde(rename = "editionStmt")]
     edition_stmt: EditionStmt,
@@ -135,20 +135,20 @@ impl Display for FileDesc {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct EditionStmt {
     #[serde(rename = "$value")]
     resp_stmts: Vec<RespStmt>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct RespStmt {
     #[serde(rename = "persName")]
     pers_name: Option<PersInfo>,
     resp: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PersInfo {
     name: String,
     short: Option<String>,
@@ -156,7 +156,7 @@ pub struct PersInfo {
     address: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BiblStruct {
     monogr: Monogr,
 }
@@ -167,7 +167,7 @@ impl Display for BiblStruct {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Monogr {
     author: String,
     title: String,
@@ -182,7 +182,7 @@ impl Display for Monogr {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Imprint {
     #[serde(rename = "pubPlace")]
     pub_place: Vec<String>,
@@ -190,7 +190,7 @@ pub struct Imprint {
     date: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Body {
     #[serde(rename = "$value")]
     sentences: Vec<Sentence>,
@@ -225,7 +225,7 @@ impl Display for Body {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Sentence {
     id: u32,
     document_id: String,
@@ -254,7 +254,7 @@ impl Sentence {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Word {
     id: u32,
     form: String,
