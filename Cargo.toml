@@ -3,7 +3,7 @@
 members = ["cli", "agldt", "agldt_derive"]
 
 [workspace.package]
-version = "0.0.0"
+version = "0.0.1"
 edition = "2021"
 authors = ["Caio Geraldes <caio.geraldes@usp.br>"]
 description = "Tools for handling data conforming the standards of the Ancient Greek and Latin Dependency Treebank"

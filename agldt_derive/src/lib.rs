@@ -18,7 +18,7 @@ fn gen_postags(variants: Vec<&Variant>) -> Vec<char> {
     let mut vc: Vec<char> = vec![];
     for variant in variants.iter() {
         if variant.attrs.is_empty() {
-            let pt = gen_postag(&variant);
+            let pt = gen_postag(variant);
             if vc.contains(&pt) {
                 panic!("Two variants tried to use the same postag value: {} ", pt);
             } else {
@@ -31,18 +31,15 @@ fn gen_postags(variants: Vec<&Variant>) -> Vec<char> {
             match attr {
                 Meta::List(MetaList { path, nested, .. }) => {
                     assert_eq!(path.segments[0].ident, "postag");
-                    if let NestedMeta::Lit(l) = &nested[0] {
-                        if let Lit::Char(c) = l {
-                            let pt = c
-                                .token()
-                                .to_string()
-                                .replace('\'', "")
-                                .replace('\\', "")
-                                .chars()
-                                .next()
-                                .unwrap();
-                            vc.push(pt);
-                        }
+                    if let NestedMeta::Lit(Lit::Char(c)) = &nested[0] {
+                        let pt = c
+                            .token()
+                            .to_string()
+                            .replace(['\'', '\\'], "")
+                            .chars()
+                            .next()
+                            .unwrap();
+                        vc.push(pt);
                     }
                 }
                 _ => unimplemented!("Invalid meta"),
@@ -69,14 +66,12 @@ fn get_index(attrs: &Vec<Attribute>) -> u8 {
         match attr {
             Meta::List(MetaList { path, nested, .. }) => {
                 if path.segments[0].ident == "postagindex" {
-                    let id = get_nested_id(&nested[0]);
-                    id
+                    get_nested_id(&nested[0])
                 } else if path.segments[0].ident == "complexfeature" {
                     let attr = attrs[1].parse_meta().unwrap();
                     if let Meta::List(MetaList { path, nested, .. }) = attr {
                         assert_eq!(path.segments[0].ident, "postagindex");
-                        let id = get_nested_id(&nested[0]);
-                        id
+                        get_nested_id(&nested[0])
                     } else {
                         panic!("{:#?}", attr);
                     }
@@ -91,8 +86,7 @@ fn get_index(attrs: &Vec<Attribute>) -> u8 {
         match attr {
             Meta::List(MetaList { path, nested, .. }) => {
                 assert_eq!(path.segments[0].ident, "postagindex");
-                let id = get_nested_id(&nested[0]);
-                id
+                get_nested_id(&nested[0])
             }
             _ => unimplemented!("Invalid meta."),
         }
@@ -103,7 +97,7 @@ fn get_nested_id(nested: &NestedMeta) -> u8 {
     if let NestedMeta::Lit(l) = &nested {
         if let Lit::Int(i) = l {
             let id: u8 = i.token().to_string().parse().unwrap();
-            return id;
+            id
         } else {
             panic!("{:#?}", l);
         }
@@ -197,7 +191,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
     let expanded: proc_macro2::TokenStream = match &ast.data {
         Data::Enum(enumdata) => {
-            let variants = get_variants(&enumdata);
+            let variants = get_variants(enumdata);
             let variants_names = variants.iter().map(|v| &v.ident).collect::<Vec<&Ident>>();
             let postags: Vec<char> = gen_postags(variants);
 
