@@ -76,6 +76,10 @@ impl Treebank {
         serde_xml_rs::from_str::<Treebank>(&preprocess(string))
     }
 
+    pub fn body(&self) -> Body {
+        self.body.clone()
+    }
+
     pub fn sentences(&self) -> Vec<Sentence> {
         self.body.sentences.clone()
     }
@@ -225,17 +229,26 @@ impl Display for Body {
     }
 }
 
+impl IntoIterator for Body {
+    type Item = Sentence;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.sentences.into_iter()
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Sentence {
     id: u32,
     document_id: String,
     subdoc: String,
     #[serde(rename = "$value")]
-    words: Vec<Word>,
+    words: Vec<Token>,
 }
 
 impl Sentence {
-    pub fn words(&self) -> Vec<Word> {
+    pub fn words(&self) -> Vec<Token> {
         self.words.clone()
     }
 
@@ -254,8 +267,17 @@ impl Sentence {
     }
 }
 
+impl IntoIterator for Sentence {
+    type Item = Token;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.words.into_iter()
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
-pub struct Word {
+pub struct Token {
     id: u32,
     form: String,
     lemma: Option<String>,
@@ -265,16 +287,12 @@ pub struct Word {
     head: u32,
 }
 
-impl Word {
+impl Token {
     pub fn form(&self) -> &str {
         self.form.as_ref()
     }
-    pub fn lemma(&self) -> Option<&str> {
-        if let Some(lemma) = self.lemma.as_ref() {
-            Some(lemma)
-        } else {
-            None
-        }
+    pub fn lemma(&self) -> Option<String> {
+        self.lemma.as_ref().cloned()
     }
 
     pub fn has_postag(&self) -> bool {
