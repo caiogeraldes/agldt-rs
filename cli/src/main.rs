@@ -1,8 +1,8 @@
-use clap::*;
+use clap::Parser;
 
 mod cli;
 mod tools;
-use cli::*;
+use cli::{run_command, Cli};
 
 fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();

@@ -14,13 +14,13 @@ fn get_variants(data: &DataEnum) -> Vec<&Variant> {
     vv
 }
 
-fn gen_postags(variants: Vec<&Variant>) -> Vec<char> {
+fn gen_postags(variants: &[&Variant]) -> Vec<char> {
     let mut vc: Vec<char> = vec![];
-    for variant in variants.iter() {
+    for variant in variants {
         if variant.attrs.is_empty() {
             let pt = gen_postag(variant);
             if vc.contains(&pt) {
-                panic!("Two variants tried to use the same postag value: {} ", pt);
+                panic!("Two variants tried to use the same postag value: {pt} ");
             } else {
                 vc.push(pt);
             }
@@ -73,7 +73,7 @@ fn get_index(attrs: &Vec<Attribute>) -> u8 {
                         assert_eq!(path.segments[0].ident, "postagindex");
                         get_nested_id(&nested[0])
                     } else {
-                        panic!("{:#?}", attr);
+                        panic!("{attr:#?}");
                     }
                 } else {
                     unimplemented!("Invalid attribute.");
@@ -99,7 +99,7 @@ fn get_nested_id(nested: &NestedMeta) -> u8 {
             let id: u8 = i.token().to_string().parse().unwrap();
             id
         } else {
-            panic!("{:#?}", l);
+            panic!("{l:#?}");
         }
     } else {
         panic!("epa");
@@ -129,7 +129,6 @@ fn get_nested_id(nested: &NestedMeta) -> u8 {
 ///
 /// ```
 /// extern crate agldt_derive;
-/// extern crate agldt;
 /// use agldt::features::POSFeature;
 /// use agldt::features::PostagFeature;
 /// use agldt_derive::PostagFeature;
@@ -193,7 +192,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
         Data::Enum(enumdata) => {
             let variants = get_variants(enumdata);
             let variants_names = variants.iter().map(|v| &v.ident).collect::<Vec<&Ident>>();
-            let postags: Vec<char> = gen_postags(variants);
+            let postags: Vec<char> = gen_postags(&variants);
 
             quote!(
 

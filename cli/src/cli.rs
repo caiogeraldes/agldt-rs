@@ -1,6 +1,8 @@
-use crate::tools::*;
+use crate::tools::{
+    build_lexicon_forms, build_lexicon_lemmata, check_unicode, pick_treebank_file, print_info,
+};
 use anyhow::Result;
-use clap::*;
+use clap::{Parser, Subcommand};
 
 const HELP_TEMPLATE: &str = "\
 {before-help}{name} {version}
@@ -52,7 +54,7 @@ pub(crate) fn run_command(cli: Cli) -> Result<()> {
     match cli.command {
         Commands::Describe { treebank_file } => {
             let src = pick_treebank_file(&treebank_file)?;
-            print_info(&src)?;
+            print_info(&src);
         }
         Commands::Lexicon {
             treebank_file,
@@ -61,10 +63,10 @@ pub(crate) fn run_command(cli: Cli) -> Result<()> {
             count,
         } => {
             let src = pick_treebank_file(&treebank_file)?;
-            let output_file = if &output != "OUT" {
-                output
-            } else {
+            let output_file = if &output == "OUT" {
                 format!("lexicon-{}", &treebank_file.replace(".xml", ".csv"))
+            } else {
+                output
             };
 
             if forms {

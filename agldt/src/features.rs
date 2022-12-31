@@ -7,6 +7,15 @@ pub struct POSFeature {
 }
 
 impl POSFeature {
+    /// .
+    ///
+    /// # Panics
+    ///
+    /// Panics if index > 8.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if TODO.
     pub fn new(index: u8, char: char) -> Result<Self, Box<dyn Error>> {
         if index > 9 {
             panic!("Index out of bounds, max = 8");
@@ -14,9 +23,11 @@ impl POSFeature {
             Ok(Self { index, char })
         }
     }
+    #[must_use]
     pub fn index(&self) -> u8 {
         self.index
     }
+    #[must_use]
     pub fn char(&self) -> char {
         self.char
     }

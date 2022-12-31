@@ -40,7 +40,10 @@ use std::fmt::Display;
 /// Finally, the `head` value is sometimes an empty string, which is still an issue for me to
 /// serialize. As `0` is not used anywhere else, I replace empty strings for `"0"`.
 //
+/// # Panics
 ///
+/// Panics if it is unable to process Regexes
+#[must_use]
 pub fn preprocess(src: &str) -> String {
     let re_xmlcolon = Regex::new(r"xml:").unwrap();
     let src = re_xmlcolon.replace_all(src, "xml_");
@@ -72,22 +75,32 @@ pub struct Treebank {
 }
 
 impl Treebank {
+    /// .
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if unable to serialize
+    /// preprocessed source string.
     pub fn from_xml_str(string: &str) -> Result<Self, serde_xml_rs::Error> {
         serde_xml_rs::from_str::<Treebank>(&preprocess(string))
     }
 
+    #[must_use]
     pub fn body(&self) -> Body {
         self.body.clone()
     }
 
+    #[must_use]
     pub fn sentences(&self) -> Vec<Sentence> {
         self.body.sentences.clone()
     }
 
+    #[must_use]
     pub fn count_tokens(&self) -> usize {
         self.body.count_tokens()
     }
 
+    #[must_use]
     pub fn count_words(&self) -> usize {
         self.body.count_words()
     }
@@ -201,6 +214,7 @@ pub struct Body {
 }
 
 impl Body {
+    #[must_use]
     pub fn count_tokens(&self) -> usize {
         let mut c = 0;
         for sent in &self.sentences {
@@ -208,6 +222,7 @@ impl Body {
         }
         c
     }
+    #[must_use]
     pub fn count_words(&self) -> usize {
         let mut c = 0;
         for sent in &self.sentences {
@@ -240,7 +255,7 @@ impl IntoIterator for Body {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct Sentence {
-    id: u32,
+    pub(crate) id: u32,
     document_id: String,
     subdoc: String,
     #[serde(rename = "$value")]
@@ -248,14 +263,17 @@ pub struct Sentence {
 }
 
 impl Sentence {
+    #[must_use]
     pub fn words(&self) -> Vec<Token> {
         self.words.clone()
     }
 
+    #[must_use]
     pub fn count_tokens(&self) -> usize {
         self.words.len()
     }
 
+    #[must_use]
     pub fn count_words(&self) -> usize {
         let mut c = 0;
         for token in &self.words {
@@ -288,17 +306,21 @@ pub struct Token {
 }
 
 impl Token {
+    #[must_use]
     pub fn form(&self) -> &str {
         self.form.as_ref()
     }
+    #[must_use]
     pub fn lemma(&self) -> Option<String> {
         self.lemma.as_ref().cloned()
     }
 
+    #[must_use]
     pub fn has_postag(&self) -> bool {
         self.postag.is_some()
     }
 
+    #[must_use]
     pub fn is_word(&self) -> bool {
         if let Some(pos) = &self.postag {
             !pos.starts_with("u-")

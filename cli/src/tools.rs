@@ -1,6 +1,6 @@
-use agldt::parser::*;
+use agldt::parser::Treebank;
 use anyhow::Result;
-use icu::collator::*;
+use icu::collator::{Collator, CollatorOptions, Strength};
 use icu::locid::{locale, Locale};
 use std::collections::HashMap;
 use std::fs::{read_to_string, write};
@@ -39,8 +39,6 @@ pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bo
                 } else {
                     continue;
                 }
-            } else {
-                continue;
             }
         }
     }
@@ -48,7 +46,7 @@ pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bo
     if count {
         log::info!("Writing list of lemmata with counts in {}", &output);
         let mut lemma_count: HashMap<String, usize> = HashMap::new();
-        for token in tokens.iter() {
+        for token in &tokens {
             *lemma_count.entry(token.trim().to_string()).or_default() += 1;
         }
 
@@ -63,7 +61,7 @@ pub(crate) fn build_lexicon_lemmata(treebank: &Treebank, output: &str, count: bo
         lexicon_string = tokens.join("\n");
     } else {
         log::info!("Writing list of lemmata in {}", &output);
-        for token in tokens.iter_mut() {
+        for token in &mut tokens {
             if token.starts_with(' ') {
                 return Err(anyhow::anyhow!("{}", token));
             };
@@ -86,7 +84,7 @@ pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool
         for word in sentence.words() {
             let form_string = word.form().to_string();
             if word.is_word() {
-                tokens.push(normalize_unicode(form_string))
+                tokens.push(normalize_unicode(form_string));
             }
         }
     }
@@ -94,7 +92,7 @@ pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool
     if count {
         log::info!("Writing list of tokens with counts in {}", &output);
         let mut forms_count: HashMap<String, usize> = HashMap::new();
-        for token in tokens.iter() {
+        for token in &tokens {
             *forms_count.entry(token.trim().to_string()).or_default() += 1;
         }
 
@@ -108,7 +106,7 @@ pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool
         lexicon_string = tokens.join("\n");
     } else {
         log::info!("Writing list of tokens in {}", &output);
-        for token in tokens.iter_mut() {
+        for token in &mut tokens {
             *token = token.trim().to_string();
         }
 
@@ -120,24 +118,20 @@ pub(crate) fn build_lexicon_forms(treebank: &Treebank, output: &str, count: bool
     Ok(())
 }
 
-pub(crate) fn print_info(treebank: &Treebank) -> Result<()> {
-    println!("{}", treebank);
-    Ok(())
+pub(crate) fn print_info(treebank: &Treebank) {
+    println!("{treebank}");
 }
 
 pub(crate) fn pick_treebank_file(treebank_file: &String) -> Result<Treebank> {
     let src: String;
     if let Ok(agldt_path) = dotenv::var("AGLDT_PATH") {
         let agldt_file = std::path::Path::new(&agldt_path).join(treebank_file);
-        src = match read_to_string(&agldt_file) {
-            Ok(string) => {
-                log::info!("Using path {:?}", agldt_file);
-                string
-            }
-            Err(_) => {
-                log::info!("Using path {}", treebank_file);
-                read_to_string(treebank_file)?
-            }
+        src = if let Ok(string) = read_to_string(&agldt_file) {
+            log::info!("Using path {:?}", agldt_file);
+            string
+        } else {
+            log::info!("Using path {}", treebank_file);
+            read_to_string(treebank_file)?
         };
     } else {
         src = read_to_string(treebank_file)?;
@@ -153,7 +147,7 @@ pub(crate) fn check_unicode(treebank: &Treebank) -> Result<()> {
         for word in sentence.words() {
             let form_string = word.form().to_string();
             if word.is_word() {
-                tokens.push(form_string)
+                tokens.push(form_string);
             }
         }
     }
@@ -163,10 +157,10 @@ pub(crate) fn check_unicode(treebank: &Treebank) -> Result<()> {
     let mut nfkc: HashMap<bool, usize> = HashMap::new();
     let mut non_nfkc: Vec<String> = vec![];
 
-    for x in tokens.iter() {
-        *nfkc.entry(is_nfkc(x)).or_default() += 1;
-        if !is_nfkc(x) && !non_nfkc.contains(x) {
-            non_nfkc.push(x.to_string());
+    for token in &tokens {
+        *nfkc.entry(is_nfkc(token)).or_default() += 1;
+        if !is_nfkc(token) && !non_nfkc.contains(token) {
+            non_nfkc.push(token.to_string());
         }
     }
 
@@ -182,7 +176,7 @@ pub(crate) fn check_unicode(treebank: &Treebank) -> Result<()> {
         tokens.push(format!("\"{}\",{}", i.0, i.1));
     }
     report_string = tokens.join("\n");
-    report_string.push_str(&format!("\n\nNon-NFKC unique tokens: {:?}\n", non_nfkc));
+    report_string.push_str(&format!("\n\nNon-NFKC unique tokens: {non_nfkc:?}\n"));
 
     write("report.txt", report_string)?;
 
